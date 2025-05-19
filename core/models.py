@@ -31,12 +31,10 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.nome
 
-from django.db import models
 
 class Condominio(models.Model):
     nome = models.CharField(max_length=150, unique=True)
     localizacao = models.CharField(max_length=255)
-
     horario_atendimento = models.CharField(max_length=100, blank=True, null=True)
     contato = models.CharField(max_length=150, blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
@@ -45,3 +43,30 @@ class Condominio(models.Model):
 
     def __str__(self):
         return self.nome
+    
+class DiaOperacao(models.Model):
+    data = models.DateField(unique=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.data.strftime('%d/%m/%Y')
+    
+
+class Operacao(models.Model):
+    TIPO_CHOICES = [
+        ('coleta', 'Coleta'),
+        ('retirada', 'Retirada'),
+        ('coleta e retirada', 'Coleta e Retirada'),
+    ]
+
+    dia = models.ForeignKey(DiaOperacao, on_delete=models.CASCADE, related_name='operacoes')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    condominio = models.ForeignKey(Condominio, on_delete=models.CASCADE)
+    responsavel = models.CharField(max_length=100)
+    destinatario = models.CharField(max_length=100, blank=True, null=True)
+    horario_coleta = models.CharField(max_length = 20, blank =True, null = True)
+    observacoes = models.TextField(blank=True, null=True)
+    anexo = models.FileField(upload_to='comprovantes/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.tipo.capitalize()} - {self.condominio.nome} ({self.data_hora.strftime('%d/%m/%Y %H:%M')})"

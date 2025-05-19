@@ -1,0 +1,355 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Dia - {{ dia.data|date:"d/m/Y" }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b76dc;
+            --primary-dark: #2a5bb9;
+            --primary-light: #eef4ff;
+            --accent-color: #f8f9fa;
+            --text-color: #343a40;
+            --border-radius: 0.5rem;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            background-color: #f5f7fa;
+        }
+        
+        .page-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page-title {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        
+        .back-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            border: none;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control, .form-select {
+            border-radius: var(--border-radius);
+            padding: 0.6rem 1rem;
+            border: 1px solid #ced4da;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(59, 118, 220, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+        
+        .table {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .table thead th {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .table tbody tr:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .badge-tipo {
+            padding: 0.5rem 0.8rem;
+            font-weight: 500;
+            border-radius: 30px;
+        }
+        
+        .badge-coleta {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-retirada {
+            background-color: #fd7e14;
+            color: white;
+        }
+        
+        .badge-duplo {
+            background-color: #6610f2;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 0;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+        
+        /* Alerta customizado */
+        .alert {
+            border-radius: var(--border-radius);
+            border-left: 4px solid;
+            padding: 1rem 1.5rem;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+    <div class="content-container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'demanda' %}" class="btn back-button me-3">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </a>
+                <h1 class="page-title">Operações do dia {{ dia.data|date:"d/m/Y" }}</h1>
+            </div>
+            <div class="text-white">
+                <i class="far fa-calendar-alt me-2"></i>{{ dia.data|date:"l, d \d\e F \d\e Y" }}
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="content-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'danger' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header d-flex align-items-center">
+            <i class="fas fa-plus-circle me-2"></i>
+            Nova operação
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label for="condominio_id" class="form-label">
+                        <i class="fas fa-building me-1"></i> Condomínio
+                    </label>
+                    <select name="condominio_id" id="condominio_id" class="form-select" required>
+                        <option value="">Selecione um condomínio...</option>
+                        {% for cond in condominios %}
+                            <option value="{{ cond.id }}">{{ cond.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="tipo" class="form-label">
+                        <i class="fas fa-tags me-1"></i> Tipo de operação
+                    </label>
+                    <select name="tipo" id="tipo" class="form-select" required>
+                        <option value="">Selecione o tipo...</option>
+                        <option value="coleta">Coleta</option>
+                        <option value="retirada">Retirada</option>
+                        <option value="coleta e retirada">Coleta e Retirada</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="responsavel" class="form-label">
+                        <i class="fas fa-user me-1"></i> Responsável
+                    </label>
+                    <input type="text" name="responsavel" id="responsavel" class="form-control" required>
+                </div>
+
+                <div class="col-md-8">
+                    <label for="localizacao" class="form-label">
+                        <i class="fas fa-map-marker-alt me-1"></i> Localização
+                    </label>
+                    <input type="text" id="localizacao" class="form-control" readonly>
+                </div>
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Salvar operação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="section-title">Operações registradas</h2>
+    {% if operacoes %}
+        <div class="table-responsive">
+            <table class="table table-bordered bg-white">
+                <thead>
+                    <tr>
+                        <th><i class="far fa-clock me-1"></i> Horário</th>
+                        <th><i class="fas fa-tag me-1"></i> Tipo</th>
+                        <th><i class="fas fa-building me-1"></i> Condomínio</th>
+                        <th><i class="fas fa-user me-1"></i> Responsável</th>
+                        <th><i class="fas fa-truck me-1"></i> Destinatário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for op in operacoes %}
+                        <tr>
+                            <td>{{ op.condominio.horario_atendimento|default:'-' }}</td>
+                            <td>
+                                {% if op.tipo == "coleta" %}
+                                    <span class="badge badge-tipo badge-coleta">
+                                        <i class="fas fa-arrow-up me-1"></i> Coleta
+                                    </span>
+                                {% elif op.tipo == "retirada" %}
+                                    <span class="badge badge-tipo badge-retirada">
+                                        <i class="fas fa-arrow-down me-1"></i> Retirada
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-tipo badge-duplo">
+                                        <i class="fas fa-sync-alt me-1"></i> Coleta e Retirada
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ op.condominio.nome }}</td>
+                            <td>{{ op.responsavel }}</td>
+                            <td>{{ op.destinatario|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="far fa-clipboard"></i>
+            <p>Nenhuma operação registrada ainda para este dia.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script id="dados-condominios" type="application/json">
+    {
+        {% for cond in condominios %}
+            "{{ cond.id }}": {
+                "responsavel": "{{ cond.contato|escapejs|default_if_none:'' }}",
+                "localizacao": "{{ cond.localizacao|escapejs|default_if_none:'' }}"
+            }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    }
+</script>
+
+<script>
+    const dadosJson = document.getElementById("dados-condominios").textContent;
+    const dadosCondominios = JSON.parse(dadosJson);
+
+    document.getElementById("condominio_id").addEventListener("change", function () {
+        const condId = this.value;
+        const dados = dadosCondominios[condId];
+
+        if (dados) {
+            document.getElementById("responsavel").value = dados.responsavel;
+            document.getElementById("localizacao").value = dados.localizacao;
+        } else {
+            document.getElementById("responsavel").value = "";
+            document.getElementById("localizacao").value = "";
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

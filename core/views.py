@@ -1,7 +1,12 @@
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Operacao, DiaOperacao, Condominio
+from datetime import datetime
+from django.db.models.functions import TruncDate
 
-def login(request):
+
+def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         senha = request.POST.get('password')
@@ -9,30 +14,64 @@ def login(request):
 
         if user:
             login(request, user)
-            return redirect('inicio_analista')  
+            print("✅ Login bem-sucedido:", user)
+            return redirect('demanda')  # redireciona para a view 'demanda'
         else:
-            return render(request, 'financeiro/login.html', {
-                'erro': 'Usuário ou senha inválidos',
-                'hide_navbar': True
-            })
+            print("❌ Login falhou:", username, senha)
+            messages.error(request, 'Usuário ou senha inválidos.')
 
-    return render(request, 'login.html', {
-        'hide_navbar': True
+    return render(request, 'login.html', {'hide_navbar': True})
+
+def demanda(request):
+    if request.method == 'POST':
+        data_str = request.POST.get('data')
+
+        try:
+            nova_data = datetime.strptime(data_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Data inválida.")
+            return redirect('demanda')
+
+        if DiaOperacao.objects.filter(data=nova_data).exists():
+            messages.warning(request, "Esse dia já existe.")
+        else:
+            DiaOperacao.objects.create(data=nova_data)
+            messages.success(request, "Dia cadastrado com sucesso.")
+
+        return redirect('demanda')
+
+    dias = DiaOperacao.objects.all().order_by('-data')
+    return render(request, 'demanda.html', {'dias': dias})
+
+def detalhar_dia(request, dia_id):
+    dia = get_object_or_404(DiaOperacao, id=dia_id)
+    operacoes = Operacao.objects.filter(dia=dia).order_by('horario_coleta')
+    condominios = Condominio.objects.all()
+
+    if request.method == 'POST':
+        condominio_id = request.POST.get('condominio_id')
+        tipo = request.POST.get('tipo')
+        responsavel = request.POST.get('responsavel')
+        try:
+            condominio = Condominio.objects.get(id=condominio_id)
+            destinatario = request.POST.get('destinatario') or condominio.localizacao
+        except Condominio.DoesNotExist:
+            messages.error(request, "Condomínio inválido.")
+            return redirect('detalhar_dia', dia_id=dia.id)
+
+        Operacao.objects.create(
+            dia=dia,
+            condominio=condominio,
+            tipo=tipo,
+            responsavel=responsavel,
+            destinatario=destinatario,
+        )
+
+        messages.success(request, "Operação cadastrada com sucesso.")
+        return redirect('detalhar_dia', dia_id=dia.id)
+
+    return render(request, 'detalhes_dia.html', {
+        'dia': dia,
+        'operacoes': operacoes,
+        'condominios': condominios
     })
-
-from django.http import HttpResponse
-from django.contrib.auth import get_user_model
-
-def criar_superusuario(request):
-    Usuario = get_user_model()
-
-    if Usuario.objects.filter(is_superuser=True).exists():
-        return HttpResponse("Superusuário já existe.")
-
-    Usuario.objects.create_superuser(
-        nome='admin',
-        password='admin1234',
-        is_active=True,
-        is_staff=True
-    )
-    return HttpResponse("Superusuário criado com sucesso!")
