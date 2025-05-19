@@ -279,9 +279,9 @@
             <table class="table table-bordered bg-white">
                 <thead>
                     <tr>
+                        <th><i class="fas fa-building me-1"></i> Condomínio</th>
                         <th><i class="far fa-clock me-1"></i> Horário</th>
                         <th><i class="fas fa-tag me-1"></i> Tipo</th>
-                        <th><i class="fas fa-building me-1"></i> Condomínio</th>
                         <th><i class="fas fa-user me-1"></i> Responsável</th>
                         <th><i class="fas fa-truck me-1"></i> Destinatário</th>
                     </tr>
@@ -289,6 +289,7 @@
                 <tbody>
                     {% for op in operacoes %}
                         <tr>
+                            <td>{{ op.condominio.nome }}</td>
                             <td>{{ op.condominio.horario_atendimento|default:'-' }}</td>
                             <td>
                                 {% if op.tipo == "coleta" %}
@@ -305,7 +306,6 @@
                                     </span>
                                 {% endif %}
                             </td>
-                            <td>{{ op.condominio.nome }}</td>
                             <td>{{ op.responsavel }}</td>
                             <td>{{ op.destinatario|default:"—" }}</td>
                         </tr>
