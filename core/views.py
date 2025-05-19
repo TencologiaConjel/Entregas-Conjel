@@ -19,3 +19,20 @@ def login(request):
     return render(request, 'login.html', {
         'hide_navbar': True
     })
+
+from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+
+def criar_superusuario(request):
+    Usuario = get_user_model()
+
+    if Usuario.objects.filter(is_superuser=True).exists():
+        return HttpResponse("Superusuário já existe.")
+
+    Usuario.objects.create_superuser(
+        nome='admin',
+        password='admin1234',
+        is_active=True,
+        is_staff=True
+    )
+    return HttpResponse("Superusuário criado com sucesso!")
