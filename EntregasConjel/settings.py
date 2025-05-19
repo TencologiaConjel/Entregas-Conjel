@@ -109,3 +109,7 @@ AUTH_USER_MODEL = 'core.Usuario'
 CSRF_TRUSTED_ORIGINS = [
     'https://entregas-conjel-production.up.railway.app/',
 ]
+
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
