@@ -52,6 +52,9 @@ def detalhar_dia(request, dia_id):
         condominio_id = request.POST.get('condominio_id')
         tipo = request.POST.get('tipo')
         responsavel = request.POST.get('responsavel')
+        protocolo = request.POST.get('protocolo') == 'on'
+        malote = request.POST.get('malote') == 'on'
+
         try:
             condominio = Condominio.objects.get(id=condominio_id)
             destinatario = request.POST.get('destinatario') or condominio.localizacao
@@ -65,6 +68,8 @@ def detalhar_dia(request, dia_id):
             tipo=tipo,
             responsavel=responsavel,
             destinatario=destinatario,
+            protocolo=protocolo,
+            malote=malote,
         )
 
         messages.success(request, "Operação cadastrada com sucesso.")

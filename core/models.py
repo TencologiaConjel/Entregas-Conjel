@@ -67,6 +67,8 @@ class Operacao(models.Model):
     horario_coleta = models.CharField(max_length = 20, blank =True, null = True)
     observacoes = models.TextField(blank=True, null=True)
     anexo = models.FileField(upload_to='comprovantes/', blank=True, null=True)
+    protocolo = models.BooleanField(default=False)
+    malote = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.tipo.capitalize()} - {self.condominio.nome} ({self.data_hora.strftime('%d/%m/%Y %H:%M')})"

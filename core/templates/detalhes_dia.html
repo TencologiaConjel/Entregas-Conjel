@@ -258,21 +258,36 @@
                     <input type="text" name="responsavel" id="responsavel" class="form-control" required>
                 </div>
 
-                <div class="col-md-8">
+               <div class="col-md-6">
                     <label for="localizacao" class="form-label">
                         <i class="fas fa-map-marker-alt me-1"></i> Localização
                     </label>
                     <input type="text" id="localizacao" class="form-control" readonly>
                 </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="protocolo" id="protocolo">
+                        <label class="form-check-label" for="protocolo">
+                            <i class="fas fa-file-alt me-1"></i> Protocolo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="malote" id="malote">
+                        <label class="form-check-label" for="malote">
+                            <i class="fas fa-briefcase me-1"></i> Malote
+                        </label>
+                    </div>
+                </div>
+
                 <div class="col-12 mt-4">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-1"></i> Salvar operação
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
-
     <h2 class="section-title">Operações registradas</h2>
     {% if operacoes %}
         <div class="table-responsive">
@@ -284,6 +299,8 @@
                         <th><i class="fas fa-tag me-1"></i> Tipo</th>
                         <th><i class="fas fa-user me-1"></i> Responsável</th>
                         <th><i class="fas fa-truck me-1"></i> Destinatário</th>
+                        <th><i class="fas fa-file-alt me-1"></i> Protocolo</th>
+                        <th><i class="fas fa-briefcase me-1"></i> Malote</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -308,6 +325,20 @@
                             </td>
                             <td>{{ op.responsavel }}</td>
                             <td>{{ op.destinatario|default:"—" }}</td>
+                            <td>
+                            {% if op.protocolo %}
+                                <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if op.malote %}
+                                <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle text-muted"></i>
+                            {% endif %}
+                        </td>
                         </tr>
                     {% endfor %}
                 </tbody>
