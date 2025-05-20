@@ -1,9 +1,11 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .models import Operacao, DiaOperacao, Condominio
+from .models import Operacao, DiaOperacao, Condominio, ItemEntregavel
 from datetime import datetime
 from django.db.models.functions import TruncDate
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 def login_view(request):
@@ -41,6 +43,9 @@ def demanda(request):
         return redirect('demanda')
 
     dias = DiaOperacao.objects.all().order_by('-data')
+
+    for dia in dias:
+     dia.operacao_principal = dia.operacoes.first()
     return render(request, 'demanda.html', {'dias': dias})
 
 def detalhar_dia(request, dia_id):
@@ -80,3 +85,54 @@ def detalhar_dia(request, dia_id):
         'operacoes': operacoes,
         'condominios': condominios
     })
+
+def editar_operacao(request, operacao_id):
+    operacao = get_object_or_404(Operacao, id=operacao_id)
+    itens = ItemEntregavel.objects.all()
+
+    if request.method == 'POST':
+        observacoes = request.POST.get('observacoes')
+        itens_ids = request.POST.getlist('itens_entregues')
+
+        operacao.observacoes = observacoes
+        operacao.itens_entregues.set(itens_ids)
+        operacao.save()
+
+        return redirect('entregas_finalizadas')  
+
+    return render(request, 'editar_operacao.html', {
+        'operacao': operacao,
+        'itens': itens,
+    })
+
+
+def entregas_finalizadas(request):
+    operacoes = Operacao.objects.prefetch_related('itens_entregues').select_related('dia', 'condominio').order_by('-dia__data', '-id')
+
+    return render(request, 'entregas_finalizadas.html', {
+        'operacoes': operacoes
+    })
+
+def copiar_operacao(request, operacao_id):
+    print("➡️ Copiando operação ID:", operacao_id)  # DEBUG
+
+    original = get_object_or_404(Operacao, id=operacao_id)
+
+    nova = Operacao.objects.create(
+        dia=original.dia,
+        tipo=original.tipo,
+        condominio=original.condominio,
+        responsavel=original.responsavel,
+        destinatario=original.destinatario,
+        horario_coleta=original.horario_coleta,
+        observacoes=original.observacoes,
+        protocolo=original.protocolo,
+        malote=original.malote
+    )
+
+    nova.itens_entregues.set(original.itens_entregues.all())
+    print("✅ Nova operação criada:", nova.id)  # DEBUG
+
+    messages.success(request, "Operação copiada com sucesso.")
+    return redirect('detalhar_dia', dia_id=original.dia.id)
+

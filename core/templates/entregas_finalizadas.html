@@ -1,0 +1,525 @@
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Entregas - {{ dia.data|date:"d/m/Y" }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .badge.bg-success { background-color: #28a745 !important; }
+        .badge.bg-warning { background-color: #ffc107 !important; }
+        .badge.bg-primary { background-color: #0d6efd !important; }
+        
+        .table-container {
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .btn-filter {
+            min-width: 120px;
+        }
+        
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        .item-list {
+            margin: 0;
+            padding-left: 1rem;
+        }
+        
+        .item-list li {
+            margin-bottom: 0.25rem;
+        }
+        
+        .table-responsive {
+            max-height: 70vh;
+        }
+        
+        .actions-cell {
+            min-width: 150px;
+        }
+        
+        .btn-acao {
+            margin: 2px;
+        }
+        
+        #filtrosCollapse {
+            border: 1px solid rgba(0,0,0,.125);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="fas fa-clipboard-check me-2"></i> Histórico de Entregas</h2>
+        <div>
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">
+                <i class="fas fa-filter me-1"></i> Filtros
+            </button>
+            <a href="#" class="btn btn-success ms-2">
+                <i class="fas fa-plus me-1"></i> Nova Entrega
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="messages mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="collapse mb-3" id="filtrosCollapse">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="filtro-data" class="form-label">Data</label>
+                <input type="date" class="form-control" id="filtro-data">
+            </div>
+            <div class="col-md-3">
+                <label for="filtro-condominio" class="form-label">Condomínio</label>
+                <select class="form-select" id="filtro-condominio">
+                    <option value="">Todos</option>
+                    <!-- Opções de condomínio aqui -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtro-tipo" class="form-label">Tipo</label>
+                <select class="form-select" id="filtro-tipo">
+                    <option value="">Todos</option>
+                    <option value="coleta">Coleta</option>
+                    <option value="retirada">Retirada</option>
+                    <option value="ambos">Coleta e Retirada</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filtro-responsavel" class="form-label">Responsável</label>
+                <input type="text" class="form-control" id="filtro-responsavel" placeholder="Nome do responsável">
+            </div>
+            <div class="col-12 d-flex justify-content-end">
+                <button type="button" class="btn btn-primary me-2" id="aplicar-filtros">
+                    <i class="fas fa-search me-1"></i> Filtrar
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="limpar-filtros">
+                    <i class="fas fa-eraser me-1"></i> Limpar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            {% if operacoes %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabela-entregas">
+                        <thead class="table-primary">
+                            <tr>
+                                <th class="sortable" data-sort="data">
+                                    <div class="d-flex align-items-center">
+                                        Data <i class="fas fa-sort ms-1"></i>
+                                    </div>
+                                </th>
+                                <th class="sortable" data-sort="condominio">
+                                    <div class="d-flex align-items-center">
+                                        Condomínio <i class="fas fa-sort ms-1"></i>
+                                    </div>
+                                </th>
+                                <th>Tipo</th>
+                                <th>Responsável</th>
+                                <th>Destinatário</th>
+                                <th>Itens Entregues</th>
+                                <th>Observações</th>
+                                <th class="text-center">Protocolo</th>
+                                <th class="text-center">Malote</th>
+                                <th class="text-center actions-cell">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for op in operacoes %}
+                            <tr>
+                                <td>{{ op.dia.data|date:"d/m/Y" }}</td>
+                                <td>{{ op.condominio.nome }}</td>
+                                <td>
+                                    {% if op.tipo == "coleta" %}
+                                        <span class="badge bg-success">Coleta</span>
+                                    {% elif op.tipo == "retirada" %}
+                                        <span class="badge bg-warning text-dark">Retirada</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Coleta e Retirada</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ op.responsavel }}</td>
+                                <td>{{ op.destinatario|default:"—" }}</td>
+                                <td>
+                                    {% if op.itens_entregues.all %}
+                                        <ul class="item-list">
+                                            {% for item in op.itens_entregues.all %}
+                                                <li>{{ item.nome }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <em class="text-muted">—</em>
+                                    {% endif %}
+                                </td>
+                                <td>{{ op.observacoes|default:"—" }}</td>
+                                <td class="text-center">
+                                    {% if op.protocolo %}
+                                        <i class="fas fa-check-circle text-success" data-bs-toggle="tooltip" title="Protocolo registrado"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-muted" data-bs-toggle="tooltip" title="Sem protocolo"></i>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if op.malote %}
+                                        <i class="fas fa-check-circle text-success" data-bs-toggle="tooltip" title="Malote registrado"></i>
+                                    {% else %}
+                                        <i class="fas fa-times-circle text-muted" data-bs-toggle="tooltip" title="Sem malote"></i>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-acao visualizar-btn" 
+                                                data-id="{{ op.id }}" data-bs-toggle="tooltip" title="Visualizar detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-acao copiar-linha" 
+                                                data-bs-toggle="tooltip" title="Copiar informações">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info m-3">
+                    <i class="fas fa-info-circle me-2"></i> Nenhuma entrega finalizada registrada ainda.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <span class="text-muted">Exibindo <span id="total-registros">{{ operacoes|length }}</span> registros</span>
+        </div>
+        <nav aria-label="Paginação">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Próximo</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<div class="toast-container">
+    <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" id="toast-sucesso">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i> <span id="toast-mensagem">Informações copiadas com sucesso!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="modal fade" id="detalheModal" tabindex="-1" aria-labelledby="detalheModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detalheModalLabel">Detalhes da Entrega</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calendar me-2"></i> Data</h6>
+                        <p id="modal-data" class="mb-3">01/01/2025</p>
+                        
+                        <h6><i class="fas fa-building me-2"></i> Condomínio</h6>
+                        <p id="modal-condominio" class="mb-3">Nome do Condomínio</p>
+                        
+                        <h6><i class="fas fa-tag me-2"></i> Tipo</h6>
+                        <p id="modal-tipo" class="mb-3"><span class="badge bg-success">Coleta</span></p>
+                        
+                        <h6><i class="fas fa-user me-2"></i> Responsável</h6>
+                        <p id="modal-responsavel" class="mb-3">Nome do Responsável</p>
+                        
+                        <h6><i class="fas fa-user-tag me-2"></i> Destinatário</h6>
+                        <p id="modal-destinatario" class="mb-3">Nome do Destinatário</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-box me-2"></i> Itens Entregues</h6>
+                        <ul id="modal-itens" class="mb-3">
+                            <li>Item 1</li>
+                            <li>Item 2</li>
+                        </ul>
+                        
+                        <h6><i class="fas fa-file-alt me-2"></i> Protocolo</h6>
+                        <p id="modal-protocolo" class="mb-3"><i class="fas fa-check-circle text-success"></i> Sim</p>
+                        
+                        <h6><i class="fas fa-briefcase me-2"></i> Malote</h6>
+                        <p id="modal-malote" class="mb-3"><i class="fas fa-check-circle text-success"></i> Sim</p>
+                        
+                        <h6><i class="fas fa-comment-alt me-2"></i> Observações</h6>
+                        <p id="modal-observacoes" class="mb-3">Texto das observações aqui...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-outline-primary modal-copiar-btn">
+                    <i class="fas fa-copy me-1"></i> Copiar Dados
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            delay: { show: 500, hide: 100 }
+        });
+    });
+
+    // Toast de sucesso
+    const toastSucesso = document.getElementById('toast-sucesso');
+    const toastObj = new bootstrap.Toast(toastSucesso, {
+        delay: 3000
+    });
+    
+    // Modal de detalhes
+    const detalheModal = document.getElementById('detalheModal');
+    const modalObj = new bootstrap.Modal(detalheModal);
+    
+    // Botões de visualizar
+    const botoesVisualizar = document.querySelectorAll('.visualizar-btn');
+    botoesVisualizar.forEach(botao => {
+        botao.addEventListener('click', function() {
+            // Aqui você buscaria os dados da entrega pelo ID
+            // Normalmente isso seria feito via AJAX 
+            // Mas para simplificar, estamos apenas copiando os dados da linha
+            
+            const linha = botao.closest('tr');
+            const tds = linha.querySelectorAll('td');
+            
+            document.getElementById('modal-data').textContent = tds[0].textContent.trim();
+            document.getElementById('modal-condominio').textContent = tds[1].textContent.trim();
+            document.getElementById('modal-tipo').innerHTML = tds[2].innerHTML.trim();
+            document.getElementById('modal-responsavel').textContent = tds[3].textContent.trim();
+            document.getElementById('modal-destinatario').textContent = tds[4].textContent.trim();
+            
+            // Itens entregues
+            const itensHtml = tds[5].innerHTML.trim();
+            document.getElementById('modal-itens').innerHTML = itensHtml;
+            
+            // Observações
+            document.getElementById('modal-observacoes').textContent = tds[6].textContent.trim();
+            
+            // Protocolo e Malote
+            document.getElementById('modal-protocolo').innerHTML = tds[7].innerHTML.trim();
+            document.getElementById('modal-malote').innerHTML = tds[8].innerHTML.trim();
+            
+            modalObj.show();
+        });
+    });
+    
+    // Botões de copiar
+    const botoesCopiar = document.querySelectorAll('.copiar-linha');
+    botoesCopiar.forEach(botao => {
+        botao.addEventListener('click', function () {
+            const linha = botao.closest('tr');
+            const tds = linha.querySelectorAll('td');
+            const dados = [];
+
+            // Dados principais (até destinatário)
+            for (let i = 0; i < 5; i++) {
+                dados.push(tds[i].innerText.trim());
+            }
+
+            // Itens entregues
+            const itens = tds[5].innerText.trim().replace(/\n/g, ", ");
+            dados.push(`ITENS: ${itens || 'Nenhum'}`);
+
+            // Observações
+            const obs = tds[6].innerText.trim();
+            dados.push(`OBS: ${obs || '—'}`);
+
+            // Protocolo
+            const protocoloIcone = tds[7].querySelector('i');
+            const protocoloTexto = (protocoloIcone && protocoloIcone.classList.contains('fa-check-circle')) ? 'PROTOCOLO: Sim' : 'PROTOCOLO: Não';
+            dados.push(protocoloTexto);
+
+            // Malote
+            const maloteIcone = tds[8].querySelector('i');
+            const maloteTexto = (maloteIcone && maloteIcone.classList.contains('fa-check-circle')) ? 'MALOTE: Sim' : 'MALOTE: Não';
+            dados.push(maloteTexto);
+
+            const texto = dados.join(" | ");
+
+            navigator.clipboard.writeText(texto).then(() => {
+                document.getElementById('toast-mensagem').textContent = 'Informações copiadas com sucesso!';
+                toastObj.show();
+            });
+        });
+    });
+    
+    // Botão de copiar no modal
+    const modalCopiarBtn = document.querySelector('.modal-copiar-btn');
+    modalCopiarBtn.addEventListener('click', function() {
+        const dados = [
+            document.getElementById('modal-data').textContent.trim(),
+            document.getElementById('modal-condominio').textContent.trim(),
+            document.getElementById('modal-tipo').textContent.trim(),
+            document.getElementById('modal-responsavel').textContent.trim(),
+            document.getElementById('modal-destinatario').textContent.trim(),
+            `ITENS: ${document.getElementById('modal-itens').textContent.trim().replace(/\n/g, ", ")}`,
+            `OBS: ${document.getElementById('modal-observacoes').textContent.trim() || '—'}`,
+            `PROTOCOLO: ${document.getElementById('modal-protocolo').textContent.includes('Sim') ? 'Sim' : 'Não'}`,
+            `MALOTE: ${document.getElementById('modal-malote').textContent.includes('Sim') ? 'Sim' : 'Não'}`
+        ];
+        
+        const texto = dados.join(" | ");
+        
+        navigator.clipboard.writeText(texto).then(() => {
+            document.getElementById('toast-mensagem').textContent = 'Informações copiadas com sucesso!';
+            toastObj.show();
+        });
+    });
+    
+    // Filtros
+    document.getElementById('aplicar-filtros').addEventListener('click', function() {
+        const dataFiltro = document.getElementById('filtro-data').value;
+        const condominioFiltro = document.getElementById('filtro-condominio').value.toLowerCase();
+        const tipoFiltro = document.getElementById('filtro-tipo').value;
+        const responsavelFiltro = document.getElementById('filtro-responsavel').value.toLowerCase();
+        
+        const linhas = document.querySelectorAll('#tabela-entregas tbody tr');
+        let contadorVisivel = 0;
+        
+        linhas.forEach(linha => {
+            const tds = linha.querySelectorAll('td');
+            
+            // Reformatar data da tabela para comparação
+            const dataTabela = tds[0].textContent.trim();
+            const partesData = dataTabela.split('/');
+            const dataFormatada = partesData.length === 3 ? 
+                `${partesData[2]}-${partesData[1]}-${partesData[0]}` : '';
+            
+            const condominio = tds[1].textContent.trim().toLowerCase();
+            const tipo = tds[2].textContent.trim().toLowerCase();
+            const responsavel = tds[3].textContent.trim().toLowerCase();
+            
+            const filtroDataOk = !dataFiltro || dataFormatada === dataFiltro;
+            const filtroCondominioOk = !condominioFiltro || condominio.includes(condominioFiltro);
+            const filtroTipoOk = !tipoFiltro || tipo.includes(tipoFiltro.toLowerCase());
+            const filtroResponsavelOk = !responsavelFiltro || responsavel.includes(responsavelFiltro);
+            
+            const exibir = filtroDataOk && filtroCondominioOk && filtroTipoOk && filtroResponsavelOk;
+            linha.style.display = exibir ? '' : 'none';
+            
+            if (exibir) contadorVisivel++;
+        });
+        
+        document.getElementById('total-registros').textContent = contadorVisivel;
+    });
+    
+    document.getElementById('limpar-filtros').addEventListener('click', function() {
+        document.getElementById('filtro-data').value = '';
+        document.getElementById('filtro-condominio').value = '';
+        document.getElementById('filtro-tipo').value = '';
+        document.getElementById('filtro-responsavel').value = '';
+        
+        const linhas = document.querySelectorAll('#tabela-entregas tbody tr');
+        linhas.forEach(linha => {
+            linha.style.display = '';
+        });
+        
+        document.getElementById('total-registros').textContent = linhas.length;
+    });
+    
+    // Ordenação das colunas
+    document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', function() {
+            const tabela = document.getElementById('tabela-entregas');
+            const tbody = tabela.querySelector('tbody');
+            const linhas = Array.from(tbody.querySelectorAll('tr'));
+            const coluna = th.cellIndex;
+            
+            // Alternar direção de ordenação
+            const direcao = th.classList.contains('asc') ? -1 : 1;
+            th.classList.toggle('asc');
+            
+            // Atualizar ícones
+            document.querySelectorAll('.sortable').forEach(el => {
+                el.querySelector('i').className = 'fas fa-sort ms-1';
+            });
+            
+            th.querySelector('i').className = direcao === 1 ? 
+                'fas fa-sort-up ms-1' : 'fas fa-sort-down ms-1';
+            
+            // Ordenar linhas
+            linhas.sort((a, b) => {
+                const aValor = a.cells[coluna].textContent.trim();
+                const bValor = b.cells[coluna].textContent.trim();
+                
+                if (coluna === 0) {
+                    // Ordenação especial para datas no formato DD/MM/AAAA
+                    const aPartes = aValor.split('/');
+                    const bPartes = bValor.split('/');
+                    
+                    if (aPartes.length === 3 && bPartes.length === 3) {
+                        // Converter para formato AAAA-MM-DD para comparação
+                        const aData = `${aPartes[2]}-${aPartes[1]}-${aPartes[0]}`;
+                        const bData = `${bPartes[2]}-${bPartes[1]}-${bPartes[0]}`;
+                        return direcao * aData.localeCompare(bData);
+                    }
+                }
+                
+                return direcao * aValor.localeCompare(bValor);
+            });
+
+            linhas.forEach(linha => tbody.appendChild(linha));
+        });
+    });
+});
+</script>
+{% endblock %}
+</html>

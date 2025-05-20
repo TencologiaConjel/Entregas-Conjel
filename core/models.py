@@ -51,6 +51,12 @@ class DiaOperacao(models.Model):
     def __str__(self):
         return self.data.strftime('%d/%m/%Y')
     
+class ItemEntregavel(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nome
+
 
 class Operacao(models.Model):
     TIPO_CHOICES = [
@@ -69,6 +75,9 @@ class Operacao(models.Model):
     anexo = models.FileField(upload_to='comprovantes/', blank=True, null=True)
     protocolo = models.BooleanField(default=False)
     malote = models.BooleanField(default=False)
+    itens_entregues = models.ManyToManyField(ItemEntregavel, blank=True)
 
     def __str__(self):
         return f"{self.tipo.capitalize()} - {self.condominio.nome} ({self.data_hora.strftime('%d/%m/%Y %H:%M')})"
+
+
