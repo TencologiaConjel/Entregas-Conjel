@@ -6,7 +6,7 @@ from datetime import datetime
 from django.db.models.functions import TruncDate
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-
+from django.core.paginator import Paginator
 
 def login_view(request):
     if request.method == 'POST':
@@ -105,34 +105,40 @@ def editar_operacao(request, operacao_id):
         'itens': itens,
     })
 
-
 def entregas_finalizadas(request):
-    operacoes = Operacao.objects.prefetch_related('itens_entregues').select_related('dia', 'condominio').order_by('-dia__data', '-id')
+    operacoes_list = Operacao.objects.prefetch_related('itens_entregues')\
+                                     .select_related('dia', 'condominio')\
+                                     .order_by('-dia__data', '-id')
+
+    paginator = Paginator(operacoes_list, 10) 
+    page_number = request.GET.get('page')
+    operacoes = paginator.get_page(page_number)
+
+    condominios = Condominio.objects.all()
 
     return render(request, 'entregas_finalizadas.html', {
-        'operacoes': operacoes
-    })
+    'operacoes': operacoes,
+    'condominios': condominios
+})
+
 
 def copiar_operacao(request, operacao_id):
-    print("➡️ Copiando operação ID:", operacao_id)  # DEBUG
+    operacao_original = get_object_or_404(Operacao, id=operacao_id)
 
-    original = get_object_or_404(Operacao, id=operacao_id)
-
-    nova = Operacao.objects.create(
-        dia=original.dia,
-        tipo=original.tipo,
-        condominio=original.condominio,
-        responsavel=original.responsavel,
-        destinatario=original.destinatario,
-        horario_coleta=original.horario_coleta,
-        observacoes=original.observacoes,
-        protocolo=original.protocolo,
-        malote=original.malote
+    nova_operacao = Operacao.objects.create(
+        dia=operacao_original.dia,
+        condominio=operacao_original.condominio,
+        tipo=operacao_original.tipo,
+        responsavel=operacao_original.responsavel,
+        destinatario=operacao_original.destinatario,
+        protocolo=operacao_original.protocolo,
+        malote=operacao_original.malote,
+        observacoes=operacao_original.observacoes
     )
 
-    nova.itens_entregues.set(original.itens_entregues.all())
-    print("✅ Nova operação criada:", nova.id)  # DEBUG
+    nova_operacao.itens_entregues.set(operacao_original.itens_entregues.all())
+    nova_operacao.save()
 
-    messages.success(request, "Operação copiada com sucesso.")
-    return redirect('detalhar_dia', dia_id=original.dia.id)
+    messages.success(request, f"Nova operação criada com base na operação {operacao_id}.")
+    return redirect('detalhar_dia', dia_id=operacao_original.dia.id)
 

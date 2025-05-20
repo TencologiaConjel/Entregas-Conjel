@@ -100,7 +100,9 @@
                 <label for="filtro-condominio" class="form-label">Condomínio</label>
                 <select class="form-select" id="filtro-condominio">
                     <option value="">Todos</option>
-                    <!-- Opções de condomínio aqui -->
+                    {% for cond in condominios %}
+                        <option value="{{ cond.nome|lower }}">{{ cond.nome }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-3">
@@ -223,22 +225,43 @@
     </div>
     
     <div class="d-flex justify-content-between align-items-center mt-3">
-        <div>
-            <span class="text-muted">Exibindo <span id="total-registros">{{ operacoes|length }}</span> registros</span>
-        </div>
+    <div>
+        <span class="text-muted">Exibindo <span id="total-registros">{{ operacoes.paginator.count }}</span> registros</span>
+    </div>
+
+        {% if operacoes.has_other_pages %}
         <nav aria-label="Paginação">
             <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1">Anterior</a>
-                </li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#">Próximo</a>
-                </li>
+                {% if operacoes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ operacoes.previous_page_number }}">Anterior</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                {% endif %}
+
+                {% for num in operacoes.paginator.page_range %}
+                    {% if operacoes.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if operacoes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ operacoes.next_page_number }}">Próximo</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próximo</span>
+                    </li>
+                {% endif %}
             </ul>
         </nav>
+        {% endif %}
     </div>
 </div>
 
