@@ -47,6 +47,7 @@ class Condominio(models.Model):
 class DiaOperacao(models.Model):
     data = models.DateField(unique=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    concluido = models.BooleanField(default=False)
 
     def __str__(self):
         return self.data.strftime('%d/%m/%Y')

@@ -1,0 +1,398 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entregas do Dia</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --primary-hover: #2980b9;
+            --secondary-color: #f8f9fa;
+            --danger-color: #e74c3c;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+            padding: 20px;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: var(--secondary-color);
+            color: #445;
+            border-bottom: none;
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            font-size: 15px;
+            color: #555;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .status-icon {
+            font-size: 1.2rem;
+        }
+        
+        .status-icon.active {
+            color: #2ecc71;
+        }
+        
+        .status-icon.inactive {
+            color: #ddd;
+        }
+        
+        .actions-column {
+            width: 100px;
+        }
+        
+        .empty-state {
+            padding: 40px 0;
+            text-align: center;
+            color: #99a;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ccd;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .filters {
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+        
+        .badge-coleta {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .badge-entrega {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .footer-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle me-2"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="fas fa-times-circle me-2"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle me-2"></i>
+                    {% endif %}
+                    <span>{{ message }}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="page-title">
+                    <i class="fas fa-truck-loading me-2 text-primary"></i> 
+                    Entregas do Dia
+                </h2>
+                <p class="text-muted mb-0 mt-1">{{ dia.data|date:"d/m/Y" }} - {{ operacoes|length }} registros</p>
+            </div>
+            <div>
+                
+            </div>
+        </div>
+        
+        <div class="filters border-bottom">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Buscar...">
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="d-flex justify-content-end gap-2">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" onclick="filterAll()">Todos</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="filterByType('entrega')">Entregas</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="filterByType('coleta')">Coletas</button>
+                        </div>
+                        <div class="btn-group btn-group-sm ms-2" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="filterByStatus('completo')">Completos</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="filterByStatus('pendente')">Pendentes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover" id="entregasTable">
+                <thead>
+                    <tr>
+                        <th>Condomínio</th>
+                        <th>Tipo</th>
+                        <th>Responsável</th>
+                        <th>Destinatário</th>
+                        <th class="text-center">Protocolo</th>
+                        <th class="text-center">Malote</th>
+                        <th>Observações</th>
+                        <th class="text-center actions-column">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for operacao in operacoes %}
+                  <tr data-tipo="{{ operacao.tipo }}" 
+                        data-status="{% if operacao.protocolo and operacao.malote %}completo{% else %}pendente{% endif %}">
+                        
+                        <td>
+                            <div class="fw-medium">{{ operacao.condominio.nome }}</div>
+                        </td>
+                        </td>
+                        <td>
+                            <span class="badge {% if operacao.tipo == 'E' %}badge-entrega{% else %}badge-coleta{% endif %}">
+                                {{ operacao.get_tipo_display }}
+                            </span>
+                        </td>
+                        <td>{{ operacao.responsavel }}</td>
+                        <td>{{ operacao.destinatario }}</td>
+                        <td class="text-center">
+                            <i class="fas fa-clipboard-check status-icon {% if operacao.protocolo %}active{% else %}inactive{% endif %}" 
+                               data-bs-toggle="tooltip" title="{% if operacao.protocolo %}Protocolo registrado{% else %}Sem protocolo{% endif %}"></i>
+                        </td>
+                        <td class="text-center">
+                            <i class="fas fa-box status-icon {% if operacao.malote %}active{% else %}inactive{% endif %}" 
+                               data-bs-toggle="tooltip" title="{% if operacao.malote %}Malote registrado{% else %}Sem malote{% endif %}"></i>
+                        </td>
+                        <td>
+                            {% if operacao.observacoes %}
+                                <span data-bs-toggle="tooltip" title="{{ operacao.observacoes }}">
+                                    {{ operacao.observacoes|truncatechars:30 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'editar_operacao' operacao.id %}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ operacao.id }}" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="modal fade" id="deleteModal{{ operacao.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ operacao.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ operacao.id }}">Confirmação</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                        </div>
+                                        <div class="modal-body text-start">
+                                            <p>Deseja realmente excluir esta operação?</p>
+                                            <p class="mb-0 text-muted small">Esta ação não pode ser desfeita.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-box-open"></i>
+                                </div>
+                                <h5>Nenhuma entrega registrada</h5>
+                                <p class="mb-3">Não há operações registradas para este dia.</p>
+                                
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card-footer bg-white">
+            <div class="footer-actions">
+                <div>
+                    <a href="{% url 'demanda' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Voltar para demanda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Inicializar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                container: 'body'
+            });
+        });
+        
+        // Configurar o campo de busca
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#entregasTable tbody tr');
+            
+            rows.forEach(row => {
+                let found = false;
+                const cells = row.querySelectorAll('td');
+                cells.forEach(cell => {
+                    if (cell.textContent.toLowerCase().indexOf(searchText) > -1) {
+                        found = true;
+                    }
+                });
+                
+                if (found) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+    function filterByType(type) {
+        const rows = document.querySelectorAll('#entregasTable tbody tr');
+        rows.forEach(row => {
+            if (type === 'entrega' && row.dataset.tipo === 'E') {
+                row.style.display = '';
+            } else if (type === 'coleta' && row.dataset.tipo === 'C') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        document.querySelectorAll('.btn-group button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+    
+    function filterByStatus(status) {
+        const rows = document.querySelectorAll('#entregasTable tbody tr');
+        rows.forEach(row => {
+            if (row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        document.querySelectorAll('.btn-group button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+    
+    function filterAll() {
+        const rows = document.querySelectorAll('#entregasTable tbody tr');
+        rows.forEach(row => {
+            row.style.display = '';
+        });
+        
+        document.querySelectorAll('.btn-group button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+</script>
+</body>
+</html>
