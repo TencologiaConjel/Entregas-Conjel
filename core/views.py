@@ -16,12 +16,10 @@ def login_view(request):
         senha = request.POST.get('password')
         user = authenticate(request, username=username, password=senha)
 
-        if user:
+        if user is not None:
             login(request, user)
-            print("✅ Login bem-sucedido:", user)
-            return redirect('demanda')  # redireciona para a view 'demanda'
+            return redirect('demanda')  
         else:
-            print("❌ Login falhou:", username, senha)
             messages.error(request, 'Usuário ou senha inválidos.')
 
     return render(request, 'login.html', {'hide_navbar': True})
