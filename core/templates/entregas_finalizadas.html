@@ -111,7 +111,7 @@
                     <option value="">Todos</option>
                     <option value="coleta">Coleta</option>
                     <option value="retirada">Retirada</option>
-                    <option value="ambos">Coleta e Retirada</option>
+                    <option value="coleta e retirada">Coleta e Retirada</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -161,7 +161,7 @@
                             <tr>
                                 <td>{{ op.dia.data|date:"d/m/Y" }}</td>
                                 <td>{{ op.condominio.nome }}</td>
-                                <td>
+                                <td data-tipo="{{ op.tipo }}">
                                     {% if op.tipo == "coleta" %}
                                         <span class="badge bg-success">Coleta</span>
                                     {% elif op.tipo == "retirada" %}
@@ -446,58 +446,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
     
-    // Filtros
-    document.getElementById('aplicar-filtros').addEventListener('click', function() {
-        const dataFiltro = document.getElementById('filtro-data').value;
-        const condominioFiltro = document.getElementById('filtro-condominio').value.toLowerCase();
-        const tipoFiltro = document.getElementById('filtro-tipo').value;
-        const responsavelFiltro = document.getElementById('filtro-responsavel').value.toLowerCase();
+ // Filtros
+document.getElementById('aplicar-filtros').addEventListener('click', function() {
+    const dataFiltro = document.getElementById('filtro-data').value;
+    const condominioFiltro = document.getElementById('filtro-condominio').value.toLowerCase();
+    const tipoFiltro = document.getElementById('filtro-tipo').value.toLowerCase();
+    const responsavelFiltro = document.getElementById('filtro-responsavel').value.toLowerCase();
+    
+    const linhas = document.querySelectorAll('#tabela-entregas tbody tr');
+    let contadorVisivel = 0;
+    
+    linhas.forEach(linha => {
+        const tds = linha.querySelectorAll('td');
         
-        const linhas = document.querySelectorAll('#tabela-entregas tbody tr');
-        let contadorVisivel = 0;
+        // Reformatar data da tabela para comparação
+        const dataTabela = tds[0].textContent.trim();
+        const partesData = dataTabela.split('/');
+        const dataFormatada = partesData.length === 3 ? 
+            `${partesData[2]}-${partesData[1]}-${partesData[0]}` : '';
         
-        linhas.forEach(linha => {
-            const tds = linha.querySelectorAll('td');
-            
-            // Reformatar data da tabela para comparação
-            const dataTabela = tds[0].textContent.trim();
-            const partesData = dataTabela.split('/');
-            const dataFormatada = partesData.length === 3 ? 
-                `${partesData[2]}-${partesData[1]}-${partesData[0]}` : '';
-            
-            const condominio = tds[1].textContent.trim().toLowerCase();
-            const tipo = tds[2].textContent.trim().toLowerCase();
-            const responsavel = tds[3].textContent.trim().toLowerCase();
-            
-            const filtroDataOk = !dataFiltro || dataFormatada === dataFiltro;
-            const filtroCondominioOk = !condominioFiltro || condominio.includes(condominioFiltro);
-            const filtroTipoOk = !tipoFiltro || tipo.includes(tipoFiltro.toLowerCase());
-            const filtroResponsavelOk = !responsavelFiltro || responsavel.includes(responsavelFiltro);
-            
-            const exibir = filtroDataOk && filtroCondominioOk && filtroTipoOk && filtroResponsavelOk;
-            linha.style.display = exibir ? '' : 'none';
-            
-            if (exibir) contadorVisivel++;
-        });
+        const condominio = tds[1].textContent.trim().toLowerCase();
+        const tipoTexto = tds[2].innerText.trim().toLowerCase(); // <- usa innerText!
+        const responsavel = tds[3].textContent.trim().toLowerCase();
         
-        document.getElementById('total-registros').textContent = contadorVisivel;
+        const filtroDataOk = !dataFiltro || dataFormatada === dataFiltro;
+        const filtroCondominioOk = !condominioFiltro || condominio.includes(condominioFiltro);
+        const filtroTipoOk = !tipoFiltro || tipoTexto === tipoFiltro;
+        const filtroResponsavelOk = !responsavelFiltro || responsavel.includes(responsavelFiltro);
+        
+        const exibir = filtroDataOk && filtroCondominioOk && filtroTipoOk && filtroResponsavelOk;
+        linha.style.display = exibir ? '' : 'none';
+        
+        if (exibir) contadorVisivel++;
     });
     
-    document.getElementById('limpar-filtros').addEventListener('click', function() {
-        document.getElementById('filtro-data').value = '';
-        document.getElementById('filtro-condominio').value = '';
-        document.getElementById('filtro-tipo').value = '';
-        document.getElementById('filtro-responsavel').value = '';
-        
-        const linhas = document.querySelectorAll('#tabela-entregas tbody tr');
-        linhas.forEach(linha => {
-            linha.style.display = '';
-        });
-        
-        document.getElementById('total-registros').textContent = linhas.length;
-    });
-    
-    // Ordenação das colunas
+    document.getElementById('total-registros').textContent = contadorVisivel;
+});
+
+
+    document.getElementById('total-registros').textContent = contadorVisivel;
+});
     document.querySelectorAll('.sortable').forEach(th => {
         th.addEventListener('click', function() {
             const tabela = document.getElementById('tabela-entregas');
@@ -541,7 +529,6 @@ document.addEventListener('DOMContentLoaded', function () {
             linhas.forEach(linha => tbody.appendChild(linha));
         });
     });
-});
 </script>
 {% endblock %}
 </html>
