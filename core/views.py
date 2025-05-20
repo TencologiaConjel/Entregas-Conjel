@@ -7,6 +7,8 @@ from django.db.models.functions import TruncDate
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.contrib.auth import logout
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -142,3 +144,7 @@ def copiar_operacao(request, operacao_id):
     messages.success(request, f"Nova operação criada com base na operação {operacao_id}.")
     return redirect('detalhar_dia', dia_id=operacao_original.dia.id)
 
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Você saiu da sua conta com sucesso.')
+    return redirect('login') 
