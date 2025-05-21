@@ -264,7 +264,8 @@ def detalhar_dia_contabil(request, dia_id):
         malote = request.POST.get('malote') == 'on'
         valor = request.POST.get('valor')
         empresa_id = request.POST.get('empresa_id')
-        
+        nome = request.POST.get('empresa_id')
+
         if not empresa_id:
             messages.error(request, "Empresa contábil não foi selecionada.")
             return redirect('detalhar_dia_contabil', dia_id=dia.id)

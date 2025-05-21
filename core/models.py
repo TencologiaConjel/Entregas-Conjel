@@ -135,7 +135,8 @@ class OperacaoContabil(models.Model):
     protocolo = models.BooleanField(default=False)
     malote = models.BooleanField(default=False)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
+    nome = models.CharField(max_length=100)
     empresa = models.ForeignKey(EmpresaContabil, on_delete=models.CASCADE)
-    
+
     def __str__(self):
         return f"{self.documento} - R${self.valor} - {self.diaContabil}"

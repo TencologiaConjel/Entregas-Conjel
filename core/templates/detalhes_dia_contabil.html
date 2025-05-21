@@ -107,6 +107,7 @@
             <thead class="table-light">
                 <tr>
                     <th>Tipo</th>
+                    <th>Empresa</th>
                     <th>Localização</th>
                     <th>Solicitante</th>
                     <th>Documento</th>
@@ -120,6 +121,7 @@
                 {% for op in operacoes %}
                 <tr>
                     <td>{{ op.tipo }}</td>
+                    <td>{{ op.empresa.nome }}</td>
                     <td>{{ op.empresa.endereco }}</td>
                     <td>{{ op.solicitante }}</td>
                     <td>{{ op.documento }}</td>
