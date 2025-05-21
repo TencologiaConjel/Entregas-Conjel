@@ -11,4 +11,8 @@ urlpatterns = [
   path('operacao/copiar/<int:operacao_id>/', views.copiar_operacao, name='copiar_operacao'),
   path('logout', views.logout_view, name='logout'),
   path('visualizar-dia/<int:dia_id>/', views.visualizar_dia, name='visualizar_dia'),
+
+  path('painel-contabilidade/', views.painel_contabilidade, name='painel_contabilidade'),
+  path('dia-contabil/<int:dia_id>/', views.detalhar_dia_contabil, name='detalhar_dia_contabil'),
+
 ]

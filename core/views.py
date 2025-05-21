@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from datetime import datetime
 
-from .models import Operacao, DiaOperacao, Condominio, ItemEntregavel
+from .models import Operacao, DiaOperacao, Condominio, ItemEntregavel, DiaContabil, EmpresaContabil,OperacaoContabil
 
 
 def login_view(request):
@@ -17,12 +17,18 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            return redirect('demanda')
+
+            if user.tipo == 'gestao':
+                return redirect('demanda')  
+            elif user.tipo == 'contabilidade':
+                return redirect('painel_contabilidade')  
+            else:
+                return redirect('admin:index')  
+
         else:
             messages.error(request, 'Usuário ou senha inválidos.')
 
     return render(request, 'login.html', {'hide_navbar': True})
-
 
 def logout_view(request):
     logout(request)
@@ -196,4 +202,91 @@ def visualizar_dia(request, dia_id):
         'operacoes': operacoes,
         'condominios': condominios,
         'itens': itens
+    })
+
+def painel_contabil(request):
+
+    return render(request)
+
+def painel_contabilidade(request):
+    usuario = request.user
+
+    if request.method == 'POST':
+        if 'concluir_dia_id' in request.POST:
+            dia_id = request.POST.get('concluir_dia_id')
+            dia = get_object_or_404(DiaContabil, id=dia_id)
+            dia.concluido = True
+            dia.save()
+            messages.success(request, f"Dia {dia.data.strftime('%d/%m/%Y')} marcado como concluído.")
+            return redirect('painel_contabil')
+
+        elif 'data' in request.POST:
+            data_str = request.POST.get('data')
+            try:
+                nova_data = datetime.strptime(data_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, "Data inválida.")
+                return redirect('painel_contabil')
+
+            if DiaContabil.objects.filter(data=nova_data).exists():
+                messages.warning(request, "Esse dia já existe.")
+            else:
+                DiaContabil.objects.create(data=nova_data, empresa=None)
+                messages.success(request, "Dia cadastrado com sucesso.")
+
+            return redirect('painel_contabilidade')
+
+    todas_empresas = EmpresaContabil.objects.all()
+    todos_dias = DiaContabil.objects.select_related('empresa').order_by('-data')
+
+    dias_abertos = todos_dias.filter(concluido=False)
+    dias_concluidos = todos_dias.filter(concluido=True).distinct()
+
+    return render(request, 'painel_contabil.html', {
+        'empresas': todas_empresas,
+        'dias': dias_abertos,
+        'dias_concluidos': dias_concluidos,
+    })
+
+def detalhar_dia_contabil(request, dia_id):
+    if request.user.tipo != 'contabilidade':
+        return redirect('demanda')
+
+    dia = get_object_or_404(DiaContabil, id=dia_id)
+    operacoes = OperacaoContabil.objects.filter(diaContabil=dia)
+    empresas = EmpresaContabil.objects.all()
+
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo')
+        solicitante = request.POST.get('solicitante')
+        documento = request.POST.get('documento') 
+        protocolo = request.POST.get('protocolo') == 'on'
+        malote = request.POST.get('malote') == 'on'
+        valor = request.POST.get('valor')
+        empresa_id = request.POST.get('empresa_id')
+        
+        if not empresa_id:
+            messages.error(request, "Empresa contábil não foi selecionada.")
+            return redirect('detalhar_dia_contabil', dia_id=dia.id)
+
+        empresa = get_object_or_404(EmpresaContabil, id=empresa_id)
+
+        OperacaoContabil.objects.create(
+            diaContabil=dia,
+            tipo=tipo,
+            solicitante=solicitante,
+            documento=documento,
+            protocolo = protocolo,
+            malote = malote,
+            valor=valor,
+            empresa = empresa
+        )
+
+        messages.success(request, "Operação contábil cadastrada com sucesso.")
+        return redirect('detalhar_dia_contabil', dia_id=dia.id)
+
+    return render(request, 'detalhes_dia_contabil.html', {
+        'dia': dia,
+        'operacoes': operacoes,
+        'empresas': empresas,
     })

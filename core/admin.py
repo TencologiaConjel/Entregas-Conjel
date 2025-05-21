@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Condominio, ItemEntregavel
+from .models import Usuario, Condominio, ItemEntregavel, EmpresaContabil
 from django import forms
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
@@ -12,7 +12,7 @@ class UsuarioCreationForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        fields = ('nome',)
+        fields = ('nome', 'tipo')
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -35,23 +35,24 @@ class UsuarioChangeForm(forms.ModelForm):
 
     class Meta:
         model = Usuario
-        fields = ('nome', 'password', 'is_active', 'is_staff', 'is_superuser')
+        fields = ('nome', 'tipo', 'password', 'is_active', 'is_staff', 'is_superuser')
 
 
 class UsuarioAdmin(UserAdmin):
     add_form = UsuarioCreationForm
     form = UsuarioChangeForm
     model = Usuario
-    list_display = ('nome', 'is_staff', 'is_superuser')
-    list_filter = ('is_staff', 'is_superuser')
+    list_display = ('nome', 'tipo', 'is_staff', 'is_superuser')
+    list_filter = ('tipo', 'is_staff', 'is_superuser')
+    
     fieldsets = (
-        (None, {'fields': ('nome', 'password')}),
+        (None, {'fields': ('nome', 'tipo', 'password')}),
         ('Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('nome', 'password1', 'password2', 'is_staff', 'is_superuser'),
+            'fields': ('nome', 'tipo', 'password1', 'password2', 'is_staff', 'is_superuser'),
         }),
     )
     search_fields = ('nome',)
@@ -68,3 +69,8 @@ class ItemEntregavelAdmin(admin.ModelAdmin):
     search_fields = ['nome']
 
 admin.site.register(Usuario, UsuarioAdmin)
+
+@admin.register(EmpresaContabil)
+class EmpresaContabilAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'endereco')
+    search_fields = ('nome',)

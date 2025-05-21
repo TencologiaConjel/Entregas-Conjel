@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Dia Contábil - {{ dia.data|date:"d/m/Y" }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<header class="page-header bg-primary text-white py-3 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h1 class="h4 m-0">Operações do dia {{ dia.data|date:"d/m/Y" }}</h1>
+        <a href="{% url 'painel_contabilidade' %}" class="btn btn-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Voltar
+        </a>
+    </div>
+</header>
+
+<div class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <i class="fas fa-plus-circle me-2 text-primary"></i>Nova operação contábil
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label for="tipo" class="form-label">Tipo</label>
+                    <select name="tipo" id="tipo" class="form-select" required>
+                        <option value="">Selecione...</option>
+                        <option value="coleta">Coleta</option>
+                        <option value="retirada">Retirada</option>
+                        <option value="coleta e retirada">Coleta e Retirada</option>
+                    </select>
+                </div>
+                   <div class="col-md-6">
+                    <label for="empresa_id" class="form-label">Empresa Contábil</label>
+                    <select name="empresa_id" id="empresa_id" class="form-select" required>
+                        <option value="">Selecione a empresa...</option>
+                        {% for empresa in empresas %}
+                            <option value="{{ empresa.id }}">{{ empresa.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="solicitante" class="form-label">Solicitante</label>
+                    <input type="text" name="solicitante" id="solicitante" class="form-control" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="documento" class="form-label">Documento</label>
+                    <input type="text" name="documento" id="documento" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="valor" class="form-label">
+                        <i class="fas fa-dollar-sign me-1"></i> Valor (R$)
+                    </label>
+                    <input type="number" step="0.01" name="valor" id="valor" class="form-control" required>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="protocolo" id="protocolo">
+                        <label class="form-check-label" for="protocolo">
+                            <i class="fas fa-file-alt me-1"></i> Protocolo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="malote" id="malote">
+                        <label class="form-check-label" for="malote">
+                            <i class="fas fa-briefcase me-1"></i> Malote
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4 class="mb-3">Operações Registradas</h4>
+
+    {% if operacoes %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Localização</th>
+                    <th>Solicitante</th>
+                    <th>Documento</th>
+                    <th>Valor</th>
+                    <th>protocolo</th>
+                    <th>malote</th>
+                    <th>Função</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for op in operacoes %}
+                <tr>
+                    <td>{{ op.tipo }}</td>
+                    <td>{{ op.empresa.endereco }}</td>
+                    <td>{{ op.solicitante }}</td>
+                    <td>{{ op.documento }}</td>
+                    <td>R$ {{ op.valor }}</td>
+                    <td>{% if op.protocolo %}<i class="fas fa-check text-success"></i>{% else %}—{% endif %}</td>
+                    <td>{% if op.malote %}<i class="fas fa-check text-success"></i>{% else %}—{% endif %}</td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-sm btn-secondary copiar-linha">
+                                <i class="fas fa-copy me-1"></i> Copiar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-muted text-center py-4">
+        <i class="fas fa-folder-open fa-2x mb-2"></i>
+        <p class="mb-0">Nenhuma operação contábil registrada para este dia.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const botoesCopiar = document.querySelectorAll('.copiar-linha');
+
+    botoesCopiar.forEach(botao => {
+        botao.addEventListener('click', function () {
+            const linha = botao.closest('tr');
+            const tds = linha.querySelectorAll('td');
+            const dados = [];
+
+            // Pega os textos dos primeiros 5 campos: tipo, solicitante, documento, valor, localização (opcional)
+            for (let i = 0; i < tds.length - 3; i++) {
+                dados.push(tds[i].innerText.trim());
+            }
+
+            const protocoloTd = tds[tds.length - 3];
+            const protocoloIcone = protocoloTd.querySelector('i');
+            const protocoloTexto = (protocoloIcone && protocoloIcone.classList.contains('fa-check-circle')) ? 'PROTOCOLO: Sim' : 'PROTOCOLO: Não';
+            dados.push(protocoloTexto);
+
+            const maloteTd = tds[tds.length - 2];
+            const maloteIcone = maloteTd.querySelector('i');
+            const maloteTexto = (maloteIcone && maloteIcone.classList.contains('fa-check-circle')) ? 'MALOTE: Sim' : 'MALOTE: Não';
+            dados.push(maloteTexto);
+
+            const texto = dados.join(" | ");
+
+            navigator.clipboard.writeText(texto).then(() => {
+                botao.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                setTimeout(() => {
+                    botao.innerHTML = '<i class="fas fa-copy me-1"></i> Copiar';
+                }, 2000);
+            });
+        });
+    });
+});
+</script>
+
+</body>
+</html>
