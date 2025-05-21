@@ -163,14 +163,13 @@
                                 <a href="{% url 'detalhar_dia' dia.id %}" class="btn btn-primary action-btn">
                                     <i class="fas fa-eye me-1"></i> Ver lançamentos
                                 </a>
-                                {% if not dia.concluido %}
-                                <form method="post" action="{% url 'visualizar_dia' dia.id %}" style="display:inline-block">
+                              <form method="post" action="{% url 'demanda' %}" style="display:inline-block">
                                     {% csrf_token %}
+                                    <input type="hidden" name="concluir_dia_id" value="{{ dia.id }}">
                                     <button type="submit" class="btn btn-success action-btn">
                                         <i class="fas fa-check me-1"></i> Concluir
                                     </button>
                                 </form>
-                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
