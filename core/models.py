@@ -64,9 +64,6 @@ class ItemEntregavel(models.Model):
     def __str__(self):
         return self.nome
 
-# ---------------------------
-# Dia para Gestão Condominial
-# ---------------------------
 class DiaOperacao(models.Model):
     data = models.DateField(unique=True)
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -75,9 +72,6 @@ class DiaOperacao(models.Model):
     def __str__(self):
         return self.data.strftime('%d/%m/%Y')
 
-# ---------------------------
-# Operações de Gestão Condominial
-# ---------------------------
 class Operacao(models.Model):
     TIPO_CHOICES = [
         ('coleta', 'Coleta'),
@@ -111,7 +105,7 @@ class EmpresaContabil(models.Model):
 
 class DiaContabil(models.Model):
     data = models.DateField()
-    empresa = models.ForeignKey(EmpresaContabil, on_delete=models.CASCADE, null=True, blank=True)
+    empresa = models.ForeignKey(EmpresaContabil, on_delete=models.CASCADE, null=True)
     concluido = models.BooleanField(default=False)  
 
     class Meta:
@@ -128,7 +122,7 @@ class OperacaoContabil(models.Model):
         ('retirada', 'Retirada'),
         ('coleta e retirada', 'Coleta e Retirada'),
     ]
-    diaContabil = models.ForeignKey(DiaContabil, on_delete=models.CASCADE, related_name='operacoes')
+    diaContabil = models.ForeignKey(DiaContabil, on_delete=models.CASCADE, null=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     solicitante = models.CharField(max_length=100)
     documento = models.CharField(max_length=100)
