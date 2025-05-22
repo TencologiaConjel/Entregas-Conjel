@@ -264,7 +264,6 @@ def detalhar_dia_contabil(request, dia_id):
         malote = request.POST.get('malote') == 'on'
         valor = request.POST.get('valor')
         empresa_id = request.POST.get('empresa_id')
-        nome = request.POST.get('empresa_id')
 
         if not empresa_id:
             messages.error(request, "Empresa contábil não foi selecionada.")
@@ -291,3 +290,24 @@ def detalhar_dia_contabil(request, dia_id):
         'operacoes': operacoes,
         'empresas': empresas,
     })
+
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+def criar_superusuario_auto(request):
+    if User.objects.filter(is_superuser=True).exists():
+        messages.info(request, "Já existe um superusuário cadastrado.")
+        return redirect('login')
+
+    if not User.objects.filter(nome='admin').exists():
+        User.objects.create_superuser(
+            nome='admin',
+            password='admin1234',
+            tipo='gestao'
+        )
+        messages.success(request, "Superusuário 'admin' criado com sucesso! (senha: admin1234)")
+    else:
+        messages.warning(request, "Usuário 'admin' já existe.")
+
+    return redirect('login')
