@@ -118,9 +118,9 @@ class DiaContabil(models.Model):
 class OperacaoContabil(models.Model):
      
     TIPO_CHOICES = [
-        ('coleta', 'Coleta'),
+        ('entrega', 'Entrega'),
         ('retirada', 'Retirada'),
-        ('coleta e retirada', 'Coleta e Retirada'),
+        ('entrega e retirada', 'Entrega e Retirada'),
     ]
     diaContabil = models.ForeignKey(DiaContabil, on_delete=models.CASCADE, null=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
