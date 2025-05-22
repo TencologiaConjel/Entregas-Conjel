@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerar Relatório Contábil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a2e8e6fe88.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-light py-4">
+<div class="container">
+    <!-- Card de Filtro -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-file-excel me-2"></i> Gerar Relatório Contábil</h5>
+            <a href="{% url 'painel_contabilidade' %}" class="btn btn-light btn-sm">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <form action="{% url 'relatorio_contabil_form' %}" method="get" class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="mes" class="form-label">Mês</label>
+                    <select name="mes" id="mes" class="form-select" required>
+                        {% for i in meses %}
+                            <option value="{{ i }}" {% if i == mes_atual %}selected{% endif %}>
+                                {{ i|stringformat:"02d" }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="ano" class="form-label">Ano</label>
+                    <input type="number" name="ano" id="ano" class="form-control" value="{{ ano_atual }}" required>
+                </div>
+            </div>
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-filter me-1"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if operacoes %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h6 class="mb-0">Entregas de {{ mes }}/{{ ano }}</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Solicitante</th>
+                        <th>Documento</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Empresa</th>
+                        <th>Endereço</th>
+                        <th>Protocolo</th>
+                        <th>Malote</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for operacao in operacoes %}
+                    <tr>
+                        <td>{{ operacao.solicitante }}</td>
+                        <td>{{ operacao.documento }}</td>
+                        <td>{{ operacao.get_tipo_display }}</td>
+                        <td>R$ {{ operacao.valor|floatformat:2 }}</td>
+                        <td>{{ operacao.empresa.nome }}</td>
+                        <td>{{operacao.empresa.endereco}}</td>
+                        <td class="text-center">
+                            {% if operacao.protocolo %}
+                                <span class="badge badge-protocolo" style="background-color: grey;">Sim</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Não</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if operacao.malote %}
+                                <span class="badge badge-malote" style="background-color: grey;">Sim</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Não</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                </tbody>
+            </table>
+
+            <form action="{% url 'gerar_excel_contabil' %}" method="get" class="text-end mt-3">
+                <input type="hidden" name="mes" value="{{ mes }}">
+                <input type="hidden" name="ano" value="{{ ano }}">
+                <button type="submit" class="btn btn-outline-success">
+                    <i class="fas fa-file-export me-1"></i> Exportar para Excel
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

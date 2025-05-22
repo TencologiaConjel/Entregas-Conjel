@@ -55,7 +55,7 @@
     </style>
 </head>
 <body>
-<div class="container py-4">
+<div class="main-container">
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -92,6 +92,7 @@
                         <th>Tipo</th>
                         <th>Valor</th>
                         <th>Empresa</th>
+                        <th>Endereço</th>
                         <th class="text-center">Protocolo</th>
                         <th class="text-center">Malote</th>
                     </tr>
@@ -104,16 +105,17 @@
                         <td>{{ operacao.get_tipo_display }}</td>
                         <td>R$ {{ operacao.valor|floatformat:2 }}</td>
                         <td>{{ operacao.empresa.nome }}</td>
+                        <td>{{operacao.empresa.endereco}}</td>
                         <td class="text-center">
                             {% if operacao.protocolo %}
-                                <span class="badge badge-protocolo">Sim</span>
+                                <span class="">Sim</span>
                             {% else %}
                                 <span class="badge bg-secondary">Não</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
                             {% if operacao.malote %}
-                                <span class="badge badge-malote">Sim</span>
+                                <span class="badge bg-secondary">Sim</span>
                             {% else %}
                                 <span class="badge bg-secondary">Não</span>
                             {% endif %}
@@ -128,8 +130,8 @@
                             </div>
                         </td>
                     </tr>
-                    {% endfor %}
                 </tbody>
+                {% endfor %}
             </table>
         </div>
     </div>

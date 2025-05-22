@@ -16,4 +16,6 @@ urlpatterns = [
   path('dia-contabil/<int:dia_id>/', views.detalhar_dia_contabil, name='detalhar_dia_contabil'),
   path('criar-admin/', views.criar_superusuario_auto, name='criar_superusuario_auto'),
   path('visualizar-dia-contabil/<int:dia_id>/', views.visualizar_dia_contabil, name='visualizar_dia_contabil'),
+  path('relatorio-contabil/', views.relatorio_contabil_form, name='relatorio_contabil_form'),
+  path('relatorio-contabil/gerar/', views.gerar_ecxel_contabil, name='gerar_excel_contabil'),
 ]

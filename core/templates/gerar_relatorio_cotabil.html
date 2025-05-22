@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerar Relatório Contábil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+        .page-title {
+            font-weight: 600;
+            color: #3b76dc;
+            margin-bottom: 1rem;
+        }
+        .btn-primary {
+            background-color: #3b76dc;
+            border-color: #3b76dc;
+        }
+        .btn-primary:hover {
+            background-color: #2a5cb8;
+            border-color: #2a5cb8;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1 class="page-title text-center">
+            <i class="fas fa-file-excel me-2"></i>Relatório Contábil
+        </h1>
+        <p class="text-muted text-center">Selecione o mês e ano para gerar o relatório de operações contábeis.</p>
+
+        <form method="post" action="{% url 'baixar_excel_contabil' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="mes" class="form-label">Mês</label>
+                <select class="form-select" id="mes" name="mes" required>
+                    <option value="">Selecione...</option>
+                    {% for i in 1|to_list:12 %}
+                        <option value="{{ i }}">{{ i|stringformat:"02d" }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="ano" class="form-label">Ano</label>
+                <input type="number" class="form-control" id="ano" name="ano" min="2020" max="2100" value="{{ now|date:'Y' }}" required>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-download me-1"></i> Gerar Excel
+                </button>
+                <a href="{% url 'painel_contabilidade' %}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

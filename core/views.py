@@ -2,12 +2,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect , HttpResponse
 from django.urls import reverse
-from datetime import datetime
-
+from datetime import datetime , date
+from django.utils.timezone import now
+from openpyxl import Workbook
 from .models import Operacao, DiaOperacao, Condominio, ItemEntregavel, DiaContabil, EmpresaContabil,OperacaoContabil
-
+from openpyxl.utils import get_column_letter
 
 def login_view(request):
     if request.method == 'POST':
@@ -337,4 +338,77 @@ def visualizar_dia_contabil(request, dia_id):
         'dia': dia,
         'operacoes': operacoes,
         'empresas': empresas,
+    })
+
+from openpyxl.styles import Font, Alignment
+
+
+def gerar_ecxel_contabil(request):
+    if request.user.tipo != 'contabilidade':
+        return redirect('painel_contabilidade')
+
+    mes = request.GET.get('mes')
+    ano = request.GET.get('ano')
+
+    if not mes or not ano:
+        return redirect('painel_contabilidade')
+
+    operacoes = OperacaoContabil.objects.select_related('empresa', 'diaContabil') \
+        .filter(diaContabil__data__month=mes, diaContabil__data__year=ano) \
+        .order_by('-diaContabil__data')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Relatório Contábil"
+
+    headers = ["Solicitante", "Documento", "Tipo", "Valor", "Empresa", "Endereço", "Protocolo", "Malote"]
+    ws.append(headers)
+
+    for col in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center")
+
+    for op in operacoes:
+        ws.append([
+            op.solicitante,
+            op.documento,
+            op.get_tipo_display(),
+            float(op.valor) if op.valor else 0,
+            op.empresa.nome if op.empresa else "Não definida",
+            op.empresa.endereco if op.empresa and op.empresa.endereco else "Não informado",
+            "Sim" if op.protocolo else "Não",
+            "Sim" if op.malote else "Não",
+        ])
+
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value)) if cell.value else 0 for cell in column_cells)
+        col_letter = get_column_letter(column_cells[0].column)
+        ws.column_dimensions[col_letter].width = length + 2
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = f"relatorio_contabil_{mes}_{ano}_{now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+def relatorio_contabil_form(request):
+    from datetime import datetime
+    from core.models import EmpresaContabil, OperacaoContabil
+
+    mes = request.GET.get('mes')
+    ano = request.GET.get('ano')
+    operacoes = []
+
+    if mes and ano:
+        operacoes = OperacaoContabil.objects.select_related('empresa', 'diaContabil') \
+            .filter(diaContabil__data__month=mes, diaContabil__data__year=ano)
+
+    return render(request, 'relatorio_contabil_form.html', {
+        'meses': range(1, 13),
+        'mes_atual': datetime.now().month,
+        'ano_atual': datetime.now().year,
+        'mes': mes,
+        'ano': ano,
+        'operacoes': operacoes  
     })
