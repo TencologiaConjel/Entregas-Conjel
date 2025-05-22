@@ -307,3 +307,34 @@ def criar_superusuario_auto(request):
         messages.warning(request, "Usuário 'admin' já existe.")
 
     return redirect('login')
+
+
+def visualizar_dia_contabil(request, dia_id):
+    if request.user.tipo != 'contabilidade':
+        messages.error(request, "Acesso negado.")
+        return redirect('painel_contabilidade')
+
+    dia = get_object_or_404(DiaContabil, id=dia_id)
+    operacoes = OperacaoContabil.objects.filter(diaContabil=dia)
+    empresas = EmpresaContabil.objects.all()
+
+    if request.method == 'POST':
+        for operacao in operacoes:
+            op_id = str(operacao.id)
+            protocolo = request.POST.get(f'protocolo_{op_id}') == 'on'
+            malote = request.POST.get(f'malote_{op_id}') == 'on'
+            observacoes = request.POST.get(f'observacoes_{op_id}', '').strip()
+
+            operacao.protocolo = protocolo
+            operacao.malote = malote
+            operacao.observacoes = observacoes
+            operacao.save()
+
+        messages.success(request, 'Informações atualizadas com sucesso.')
+        return redirect('visualizar_dia_contabil', dia_id=dia_id)
+
+    return render(request, 'visualizar_dia_contabil.html', {
+        'dia': dia,
+        'operacoes': operacoes,
+        'empresas': empresas,
+    })

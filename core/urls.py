@@ -15,4 +15,5 @@ urlpatterns = [
   path('painel-contabilidade/', views.painel_contabilidade, name='painel_contabilidade'),
   path('dia-contabil/<int:dia_id>/', views.detalhar_dia_contabil, name='detalhar_dia_contabil'),
   path('criar-admin/', views.criar_superusuario_auto, name='criar_superusuario_auto'),
+  path('visualizar-dia-contabil/<int:dia_id>/', views.visualizar_dia_contabil, name='visualizar_dia_contabil'),
 ]
