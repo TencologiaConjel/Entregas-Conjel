@@ -107,7 +107,7 @@ class DiaContabil(models.Model):
     data = models.DateField()
     empresa = models.ForeignKey(EmpresaContabil, on_delete=models.CASCADE, null=True)
     concluido = models.BooleanField(default=False)  
-
+    criado_em = models.DateTimeField(auto_now_add=True)
     class Meta:
         unique_together = ('data', 'empresa')
 

@@ -204,10 +204,6 @@ def visualizar_dia(request, dia_id):
         'itens': itens
     })
 
-def painel_contabil(request):
-
-    return render(request)
-
 def painel_contabilidade(request):
     usuario = request.user
 
@@ -218,7 +214,7 @@ def painel_contabilidade(request):
             dia.concluido = True
             dia.save()
             messages.success(request, f"Dia {dia.data.strftime('%d/%m/%Y')} marcado como concluído.")
-            return redirect('painel_contabil')
+            return redirect('painel_contabilidade')
 
         elif 'data' in request.POST:
             data_str = request.POST.get('data')
@@ -226,7 +222,7 @@ def painel_contabilidade(request):
                 nova_data = datetime.strptime(data_str, '%Y-%m-%d').date()
             except ValueError:
                 messages.error(request, "Data inválida.")
-                return redirect('painel_contabil')
+                return redirect('painel_contabilidade')
 
             if DiaContabil.objects.filter(data=nova_data).exists():
                 messages.warning(request, "Esse dia já existe.")
