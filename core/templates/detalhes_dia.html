@@ -258,13 +258,11 @@
                     <input type="text" name="responsavel" id="responsavel" class="form-control" required>
                 </div>
 
-               <div class="col-md-6">
-                    <label for="localizacao" class="form-label">
-                        <i class="fas fa-map-marker-alt me-1"></i> Localização
+                <div class="col-md-6" id="destinatario-container">
+                    <label for="destinatario" class="form-label">
+                        <i class="fas fa-map-marker-alt me-1"></i> Localização/Destinatário
                     </label>
-
-                    <select id="localizacao" name="destinatario" class="form-select" style="display: none;"></select>
-                    <input type="text" id="localizacao_input" class="form-control" readonly style="display: none;">
+                    <input type="text" name="destinatario" id="destinatario" class="form-control" readonly>
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
@@ -290,6 +288,10 @@
                         <i class="fas fa-save me-1"></i> Salvar operação
                     </button>
                 </div>
+            </form>
+        </div>
+    </div>
+
     <h2 class="section-title">Operações registradas</h2>
     {% if operacoes %}
         <div class="table-responsive">
@@ -336,16 +338,16 @@
                                 <i class="fas fa-times-circle text-muted"></i>
                             {% endif %}
                         </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{% url 'editar_operacao' op.id %}" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit me-1"></i> Editar
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-secondary copiar-linha">
-                                        <i class="fas fa-copy me-1"></i> Copiar
-                                    </button>
-                                </div>
-                            </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'editar_operacao' op.id %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit me-1"></i> Editar
+                                </a>
+                                <button type="button" class="btn btn-sm btn-secondary copiar-linha">
+                                    <i class="fas fa-copy me-1"></i> Copiar
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -359,40 +361,105 @@
     {% endif %}
 </div>
 
+<!-- Dados dos condomínios em JSON para o JavaScript -->
 <script id="dados-condominios" type="application/json">
-    {
-        {% for cond in condominios %}
-            "{{ cond.id }}": {
-                "responsavel": "{{ cond.contato|escapejs|default_if_none:'' }}",
-                "enderecos": [
-                    {% for endereco in cond.enderecos.all %}
-                        "{{ endereco.endereco|escapejs }}"{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ]
-            }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    }
+{
+    {% for cond in condominios %}
+        "{{ cond.id }}": {
+            "contato": "{{ cond.contato|default:''|escapejs }}",
+            "localizacao": "{{ cond.localizacao|escapejs }}",
+            "enderecos": [
+                {% for endereco in cond.enderecos.all %}
+                    "{{ endereco.endereco|escapejs }}"{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+}
 </script>
 
-
 <script>
-    const dadosJson = document.getElementById("dados-condominios").textContent;
-    const dadosCondominios = JSON.parse(dadosJson);
+document.addEventListener('DOMContentLoaded', function () {
+    const dadosCondominios = JSON.parse(document.getElementById("dados-condominios").textContent);
+    const condominioSelect = document.getElementById("condominio_id");
+    const destinatarioContainer = document.getElementById("destinatario-container");
+    const responsavelInput = document.getElementById("responsavel");
 
-    document.getElementById("condominio_id").addEventListener("change", function () {
+    condominioSelect.addEventListener("change", function () {
         const condId = this.value;
-        const dados = dadosCondominios[condId];
+        
+        if (!condId) {
+            // Se nenhum condomínio foi selecionado, limpa os campos
+            responsavelInput.value = "";
+            destinatarioContainer.innerHTML = `
+                <label for="destinatario" class="form-label">
+                    <i class="fas fa-map-marker-alt me-1"></i> Localização/Destinatário
+                </label>
+                <input type="text" name="destinatario" id="destinatario" class="form-control" readonly>
+            `;
+            return;
+        }
 
-        if (dados) {
-            document.getElementById("responsavel").value = dados.responsavel;
-            document.getElementById("localizacao").value = dados.localizacao;
+        const dadosCondominio = dadosCondominios[condId];
+        
+        if (!dadosCondominio) {
+            console.error("Dados do condomínio não encontrados");
+            return;
+        }
+
+        // Preenche o responsável (usando o campo 'contato' do condomínio)
+        responsavelInput.value = dadosCondominio.contato || "";
+
+        // Recria o container de destinatário
+        destinatarioContainer.innerHTML = `
+            <label for="destinatario" class="form-label">
+                <i class="fas fa-map-marker-alt me-1"></i> Localização/Destinatário
+            </label>
+        `;
+
+        const enderecos = dadosCondominio.enderecos || [];
+        const localizacaoPadrao = dadosCondominio.localizacao || "";
+
+        if (enderecos.length > 1) {
+            // Se há múltiplos endereços, cria um select
+            const select = document.createElement("select");
+            select.name = "destinatario";
+            select.id = "destinatario";
+            select.className = "form-select";
+            select.required = true;
+
+            // Adiciona a localização padrão como primeira opção
+            const defaultOption = document.createElement("option");
+            defaultOption.value = localizacaoPadrao;
+            defaultOption.textContent = localizacaoPadrao + " (Padrão)";
+            select.appendChild(defaultOption);
+
+            // Adiciona os endereços adicionais
+            enderecos.forEach(endereco => {
+                if (endereco !== localizacaoPadrao) { // Evita duplicação
+                    const option = document.createElement("option");
+                    option.value = endereco;
+                    option.textContent = endereco;
+                    select.appendChild(option);
+                }
+            });
+
+            destinatarioContainer.appendChild(select);
         } else {
-            document.getElementById("responsavel").value = "";
-            document.getElementById("localizacao").value = "";
+            // Se há apenas um endereço ou nenhum, usa input readonly com a localização padrão
+            const input = document.createElement("input");
+            input.type = "text";
+            input.className = "form-control";
+            input.name = "destinatario";
+            input.id = "destinatario";
+            input.readOnly = true;
+            input.value = enderecos.length > 0 ? enderecos[0] : localizacaoPadrao;
+            destinatarioContainer.appendChild(input);
         }
     });
-</script>
-<script>
+});
+
+// Função para copiar linha da tabela
 document.addEventListener('DOMContentLoaded', function () {
     const botoesCopiar = document.querySelectorAll('.copiar-linha');
 
@@ -428,7 +495,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

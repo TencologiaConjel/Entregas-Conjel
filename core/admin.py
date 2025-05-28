@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Condominio, ItemEntregavel, EmpresaContabil
+from .models import Usuario, Condominio, ItemEntregavel, EmpresaContabil, EnderecoCondominio
 from django import forms
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
@@ -74,3 +74,8 @@ admin.site.register(Usuario, UsuarioAdmin)
 class EmpresaContabilAdmin(admin.ModelAdmin):
     list_display = ('nome', 'endereco')
     search_fields = ('nome',)
+
+@admin.register(EnderecoCondominio)
+class EnderecoCondominioAdmin(admin.ModelAdmin):
+    list_display = ('condominio', 'endereco')
+    search_fields = ('condominio__nome', 'endereco')
