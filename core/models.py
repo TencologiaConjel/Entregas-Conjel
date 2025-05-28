@@ -1,9 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
-# ---------------------------
-# Gerenciador de Usuários
-# ---------------------------
+
 class UsuarioManager(BaseUserManager):
     def create_user(self, nome, password=None, **extra_fields):
         if not nome:
@@ -18,9 +16,7 @@ class UsuarioManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(nome, password, **extra_fields)
 
-# ---------------------------
-# Modelo de Usuário
-# ---------------------------
+
 class Usuario(AbstractBaseUser, PermissionsMixin):
     TIPO_USUARIO = [
         ('gestao', 'Gestão Condominial'),
@@ -41,9 +37,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f"{self.nome} ({self.get_tipo_display()})"
 
-# ---------------------------
-# Condominio
-# ---------------------------
+
 class Condominio(models.Model):
     nome = models.CharField(max_length=150, unique=True)
     localizacao = models.CharField(max_length=255)
@@ -54,10 +48,15 @@ class Condominio(models.Model):
 
     def __str__(self):
         return self.nome
+    
+class EnderecoCondominio(models.Model):
+    condominio = models.ForeignKey('Condominio', on_delete=models.CASCADE, related_name='enderecos')
+    endereco = models.CharField(max_length=255)
 
-# ---------------------------
-# Itens Entregáveis
-# ---------------------------
+    def __str__(self):
+        return f"{self.condominio.nome} - {self.endereco}"
+
+
 class ItemEntregavel(models.Model):
     nome = models.CharField(max_length=100, unique=True)
 
@@ -75,7 +74,7 @@ class DiaOperacao(models.Model):
 class Operacao(models.Model):
     TIPO_CHOICES = [
         ('coleta', 'Coleta'),
-        ('retirada', 'Retirada'),
+        ('entrega', 'Entrega'),
         ('coleta e retirada', 'Coleta e Retirada'),
     ]
 

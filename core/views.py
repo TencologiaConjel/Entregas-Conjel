@@ -36,11 +36,9 @@ def logout_view(request):
     messages.success(request, 'Você saiu da sua conta com sucesso.')
     return redirect('login')
 
-
 def demanda(request):
     if request.method == 'POST':
         if 'concluir_dia_id' in request.POST:
-        
             dia_id = request.POST.get('concluir_dia_id')
             dia = get_object_or_404(DiaOperacao, id=dia_id)
             dia.concluido = True
@@ -57,11 +55,11 @@ def demanda(request):
 
             if DiaOperacao.objects.filter(data=nova_data).exists():
                 messages.warning(request, "Esse dia já existe.")
+                return redirect('demanda')
             else:
-                DiaOperacao.objects.create(data=nova_data)
+                novo_dia = DiaOperacao.objects.create(data=nova_data)
                 messages.success(request, "Dia cadastrado com sucesso.")
-
-            return redirect('demanda')
+                return redirect('detalhar_dia', dia_id=novo_dia.id)
 
     todos_dias = DiaOperacao.objects.all().order_by('-data')
     dias_abertos = todos_dias.filter(concluido=False)
@@ -74,8 +72,6 @@ def demanda(request):
         'dias': dias_abertos,
         'concluidos': dias_concluidos,
     })
-
-
 
 def detalhar_dia(request, dia_id):
     dia = get_object_or_404(DiaOperacao, id=dia_id)

@@ -246,9 +246,9 @@
                     </label>
                     <select name="tipo" id="tipo" class="form-select" required>
                         <option value="">Selecione o tipo...</option>
+                        <option value="entrega">Entrega</option>
                         <option value="coleta">Coleta</option>
-                        <option value="retirada">Retirada</option>
-                        <option value="coleta e retirada">Coleta e Retirada</option>
+                        <option value="coleta e retirada">Coleta e Entrega</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -262,7 +262,9 @@
                     <label for="localizacao" class="form-label">
                         <i class="fas fa-map-marker-alt me-1"></i> Localização
                     </label>
-                    <input type="text" id="localizacao" class="form-control" readonly>
+
+                    <select id="localizacao" name="destinatario" class="form-select" style="display: none;"></select>
+                    <input type="text" id="localizacao_input" class="form-control" readonly style="display: none;">
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
@@ -310,9 +312,9 @@
                         <td>{{ op.condominio.nome }}</td>
                         <td>{{ op.condominio.horario_atendimento|default:'-' }}</td>
                         <td>
-                            {% if op.tipo == "coleta" %}
+                            {% if op.tipo == "entrega" %}
                                 <span class="badge badge-tipo badge-coleta"><i class="fas fa-arrow-up me-1"></i> Entrega</span>
-                            {% elif op.tipo == "retirada" %}
+                            {% elif op.tipo == "coleta" %}
                                 <span class="badge badge-tipo badge-retirada"><i class="fas fa-arrow-down me-1"></i> Coleta</span>
                             {% else %}
                                 <span class="badge badge-tipo badge-duplo"><i class="fas fa-sync-alt me-1"></i> Coleta e Entrega</span>
@@ -362,11 +364,16 @@
         {% for cond in condominios %}
             "{{ cond.id }}": {
                 "responsavel": "{{ cond.contato|escapejs|default_if_none:'' }}",
-                "localizacao": "{{ cond.localizacao|escapejs|default_if_none:'' }}"
+                "enderecos": [
+                    {% for endereco in cond.enderecos.all %}
+                        "{{ endereco.endereco|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
             }{% if not forloop.last %},{% endif %}
         {% endfor %}
     }
 </script>
+
 
 <script>
     const dadosJson = document.getElementById("dados-condominios").textContent;
