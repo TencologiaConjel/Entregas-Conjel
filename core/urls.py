@@ -18,4 +18,5 @@ urlpatterns = [
   path('visualizar-dia-contabil/<int:dia_id>/', views.visualizar_dia_contabil, name='visualizar_dia_contabil'),
   path('relatorio-contabil/', views.relatorio_contabil_form, name='relatorio_contabil_form'),
   path('relatorio-contabil/gerar/', views.gerar_ecxel_contabil, name='gerar_excel_contabil'),
+  path('demanda/excluir-dia/<int:dia_id>/', views.excluir_dia, name='excluir_dia'),
 ]

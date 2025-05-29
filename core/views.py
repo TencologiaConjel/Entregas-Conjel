@@ -148,6 +148,7 @@ def entregas_finalizadas(request):
     })
 
 
+
 def copiar_operacao(request, operacao_id):
     if request.method == 'POST':
         operacao_original = get_object_or_404(Operacao, id=operacao_id)
@@ -408,3 +409,10 @@ def relatorio_contabil_form(request):
         'ano': ano,
         'operacoes': operacoes  
     })
+
+def excluir_dia(request, dia_id):
+    dia = get_object_or_404(DiaOperacao, id=dia_id)
+    if request.method == 'POST':
+        dia.delete()
+        messages.success(request, 'Dia excluído com sucesso.')
+    return redirect('demanda')
