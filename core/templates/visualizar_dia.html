@@ -219,6 +219,7 @@
                         <th>Condomínio</th>
                         <th>Tipo</th>
                         <th>Responsável</th>
+                        <th>Telefone</th>
                         <th>Destinatário</th>
                         <th class="text-center">Protocolo</th>
                         <th class="text-center">Malote</th>
@@ -241,6 +242,7 @@
                             </span>
                         </td>
                         <td>{{ operacao.responsavel }}</td>
+                        <td>{{ operacao.condominio.telefone }}</td>
                         <td>{{ operacao.destinatario }}</td>
                         <td class="text-center">
                             <i class="fas fa-clipboard-check status-icon {% if operacao.protocolo %}active{% else %}inactive{% endif %}" 
