@@ -302,6 +302,7 @@
                         <th><i class="far fa-clock me-1"></i> Horário</th>
                         <th><i class="fas fa-tag me-1"></i> Tipo</th>
                         <th><i class="fas fa-user me-1"></i> Responsável</th>
+                        <th><i class="fas fa-user me-1">Telefone</i></th>
                         <th><i class="fas fa-truck me-1"></i> Destinatário</th>
                         <th><i class="fas fa-file-alt me-1"></i> Protocolo</th>
                         <th><i class="fas fa-briefcase me-1"></i> Malote</th>
@@ -323,6 +324,7 @@
                             {% endif %}
                         </td>
                         <td>{{ op.responsavel }}</td>
+                        <td>{{ op.condominio.telefone|default:"—" }}</td>
                         <td>{{ op.destinatario|default:"—" }}</td>
                         <td>
                             {% if op.protocolo %}
