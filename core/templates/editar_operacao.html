@@ -216,7 +216,7 @@
     <form method="POST">
       {% csrf_token %}
 
-      <h4 class="form-heading">O que foi entregue / Coletado</h4>
+      <h4 class="form-heading">O que foi entregue: </h4>
       <div class="checkbox-container mb-4">
         {% for item in itens %}
           <div class="custom-checkbox">
@@ -232,6 +232,23 @@
           </div>
         {% endfor %}
       </div>
+
+    <h4 class="form-heading">Conferencia Final: </h4>
+    <div class="checkbox-container mb-4">
+      {% for item in itens %}
+        <div class="custom-checkbox">
+          <input
+            type="checkbox"
+            name="itens_devolvidos"
+            value="{{ item.id }}"
+            id="devolvido_{{ item.id }}"
+            {% if item in operacao.itens_devolvidos.all %}checked{% endif %}>
+          <label for="devolvido_{{ item.id }}">
+            {{ item.nome }}
+          </label>
+        </div>
+      {% endfor %}
+    </div>
 
       <h4 class="form-heading">Observações</h4>
       <div class="mb-3">

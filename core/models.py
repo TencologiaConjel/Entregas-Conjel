@@ -62,6 +62,12 @@ class ItemEntregavel(models.Model):
 
     def __str__(self):
         return self.nome
+    
+class ItemEntregue(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nome
 
 class DiaOperacao(models.Model):
     data = models.DateField(unique=True)
@@ -89,6 +95,7 @@ class Operacao(models.Model):
     protocolo = models.BooleanField(default=False)
     malote = models.BooleanField(default=False)
     itens_entregues = models.ManyToManyField(ItemEntregavel, blank=True)
+    itens_devolvidos = models.ManyToManyField(ItemEntregavel, blank=True, related_name='recebimentos') 
 
     def __str__(self):
         return f"{self.tipo.capitalize()} - {self.condominio.nome} ({self.dia.data.strftime('%d/%m/%Y')})"
@@ -134,3 +141,4 @@ class OperacaoContabil(models.Model):
 
     def __str__(self):
         return f"{self.documento} - R${self.valor} - {self.diaContabil}"
+

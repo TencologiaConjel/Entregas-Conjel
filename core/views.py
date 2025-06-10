@@ -119,9 +119,11 @@ def editar_operacao(request, operacao_id):
     if request.method == 'POST':
         observacoes = request.POST.get('observacoes')
         itens_ids = request.POST.getlist('itens_entregues')
+        devolvidos_ids = request.POST.getlist('itens_devolvidos')
 
         operacao.observacoes = observacoes
         operacao.itens_entregues.set(itens_ids)
+        operacao.itens_devolvidos.set(devolvidos_ids)
         operacao.save()
 
         return redirect('entregas_finalizadas')
@@ -130,6 +132,7 @@ def editar_operacao(request, operacao_id):
         'operacao': operacao,
         'itens': itens,
     })
+
 
 
 def entregas_finalizadas(request):
